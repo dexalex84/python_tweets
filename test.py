@@ -1,5 +1,8 @@
 import getopt
-import sqlite3, json, sys, re
+import sqlite3
+import json
+import sys
+import re
 
 ARG_LOAD = 'load'
 ARG_CALCULATE = 'calculate'
@@ -104,16 +107,9 @@ def loadTweet(json_str, get_retweeted_status):
         pass
 
     try:
-        # for cod in json_str_final['place']:
-        #    country_codes.append(cod['country_code'])
         country_code = json_str_final['place']['country_code']
     except:
         pass
-
-    #try:
-    #    tweet_id = json_str_final['id']
-    #except:
-    #    pass
 
     try:
         tweet_text = json_str_final['text']
@@ -126,13 +122,12 @@ def loadTweet(json_str, get_retweeted_status):
         pass
 
     try:
-        #for loc in json_str_final['user']['location']:
-        #    locations.append(loc['location'])
         location = json_str_final['user']['location']
     except:
         pass
 
     try:
+        # if json has multiple tags display_url store it in collection
         for ent in json_str_final['entities']['media']:
             display_urls.append(ent['display_url'])
     except:
@@ -143,7 +138,6 @@ def loadTweet(json_str, get_retweeted_status):
     except:
         pass
 
-    #max_rows = max(len(display_urls), len(locations), len(country_codes))
     max_rows = len(display_urls)
 
     if max_rows > 1:
@@ -153,16 +147,6 @@ def loadTweet(json_str, get_retweeted_status):
         max_rows = 1
 
     for i in range(0, max_rows):
-        #if i <= len(country_codes) and len(country_codes) > 0:
-        #    country_code = country_codes[i]
-        #else:
-        #    country_code = ""
-
-        #if i <= len(locations) and len(locations) > 0:
-        #    location = locations[i]
-        #else:
-        #    location = ""
-
         if i <= len(display_urls) and len(display_urls) > 0:
             display_url = display_urls[i]
         else:
@@ -210,7 +194,6 @@ def main(argv):
                 continue
 
             tweet_rows_all = []
-
 
             if retweeted == 0:
                 # get tweet table rows
@@ -309,8 +292,6 @@ def main(argv):
 
     # close file and DB
     conn.close()
-
-
 
 if __name__ == '__main__':
     main(sys.argv[1:])
