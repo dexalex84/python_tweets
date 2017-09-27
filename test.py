@@ -55,79 +55,89 @@ def getArgs(argv):
 def main(argv):
     database, operation = getArgs(argv)
 
-    quit()
-
-    from pprint import pprint
-
-    #with open('C:\\mts\\Documents_\\three_minutes_tweets.json') as data_file:
-    #f = open('C:\\mts\\Documents_\\three_minutes_tweets.json.txt','r')
-    f = open('C:\\mts\\Documents_\\text.txt','r')
 
 
-    # name, tweet_text, country_code, display_url, lang, created_at, location
+    if operation == ARG_LOAD:
+        conn = create_connection(database)
 
-    for line in f:
-        json_str = json.loads(line)
-        print(json_str)
+        #with open('C:\\mts\\Documents_\\three_minutes_tweets.json') as data_file:
+        #f = open('C:\\mts\\Documents_\\three_minutes_tweets.json.txt','r')
+        f = open('C:\\mts\\Documents_\\text.txt','r')
 
-        name = ""
-        country_code = ""
-        id = ""
-        tweet_text = ""
-        lang = ""
-        location = ""
-        display_url = ""
-        created_at = ""
+        # name, tweet_text, country_code, display_url, lang, created_at, location
 
-        try:
-            name = json_str['user']['name']
-        except:
-            pass
+        for line in f:
+            json_str = json.loads(line)
+            print(json_str)
 
-        try:
-            country_code = json_str['place']['country_code']
-        except:
-            pass
+            name = ""
+            country_code = ""
+            tweet_id = ""
+            tweet_text = ""
+            lang = ""
+            location = ""
+            display_url = ""
+            created_at = ""
 
-        try:
-            id = json_str['id']
-        except:
-            pass
+            try:
+                name = json_str['user']['name']
+            except:
+                pass
 
-        try:
-            tweet_text = json_str['text']
-        except:
-            pass
+            try:
+                country_code = json_str['place']['country_code']
+            except:
+                pass
 
-        try:
-            lang = json_str['lang']
-        except:
-            pass
+            try:
+                tweet_id = json_str['id']
+            except:
+                pass
 
-        try:
-            location = json_str['location']
-        except:
-            pass
+            try:
+                tweet_text = json_str['text']
+            except:
+                pass
+
+            try:
+                lang = json_str['lang']
+            except:
+                pass
+
+            try:
+                location = json_str['location']
+            except:
+                pass
+
+            try:
+                display_url = json_str['url']
+            except:
+                pass
+
+            try:
+                created_at = json_str['created_at']
+            except:
+                pass
+
+        sql = ''' insert into tweet(tweet_id, name, tweet_text, country_code, display_url, lang, created_at, location)
+                  select 
+                    ?, ?, ?, ?, ?, ?, ?, ?  
+                  where 
+                        not exists (select * from tweet t2 where t2.tweet_id = ?)
+                      '''
+        cur = conn.cursor()
+
+        tweet = (tweet_id, name, tweet_text, country_code, display_url, lang, created_at, location, tweet_id)
+
+        cur.execute(sql, tweet)
+        conn.commit()
+
+        print(cur.lastrowid)
+
+        conn.close()
+
+        f.close()
 
 
-        try:
-            display_url = json_str['url']
-        except:
-            pass
-
-        try:
-            created_at = json_str['created_at']
-        except:
-            pass
-
-    print(location)
-
-
-    f.close()
-
-    #data = json.load(data_file)
-
-    #pprint(data)
-
-
-main(sys.argv[1:])
+if __name__ == '__main__':
+    main(sys.argv[1:])
