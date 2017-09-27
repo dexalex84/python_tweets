@@ -1,5 +1,5 @@
 import getopt
-import sqlite3, json, sys
+import sqlite3, json, sys, re
 
 ARG_LOAD = 'load'
 ARG_CALCULATE = 'calculate'
@@ -176,9 +176,9 @@ def loadTweet(json_str, get_retweeted_status):
 
 def main(argv):
     database, operation, tweet_file, words_file, retweeted = getArgs(argv)
+    conn = create_connection(database)
 
     if operation == ARG_LOAD:
-        conn = create_connection(database)
 
         try:
             f = open(tweet_file, 'r')
@@ -238,17 +238,78 @@ def main(argv):
             # count all rows
             cnt = cnt + len(tweet_rows_all)
 
-    # save to DB
-    cur = conn.cursor()
-    cur.executemany(sql, table)
-    conn.commit()
+
+        # save to DB
+        cur = conn.cursor()
+        cur.executemany(sql, table)
+        conn.commit()
 
 
-    print('Inserted {0} rows'.format(cnt))
+        print('Inserted {0} rows'.format(cnt))
+        f.close()
+
+    if operation == ARG_CALCULATE:
+        words_dic = {}
+
+        # load words file
+        try:
+            words_f = open(words_file, 'r')
+        except IOError as e:
+            print("I/O error ({0}): {1}".format(e.errno, e.strerror))
+            print('Exit')
+            sys.exit(2)
+        except:
+            print('Unresolved error. Exit')
+            sys.exit(2)
+
+        # load words to dictionary
+        for word in words_f:
+            pair = re.split(r'\t+', word.rstrip('\t'))
+            words_dic[pair[0]] = int(pair[1])
+            words_set = set(words_dic)
+
+        # load tweet text from DB
+        sql_norm = 'select id, tweet_text from tweet_norm'
+        cur = conn.cursor()
+        cur.execute(sql_norm)
+        rows = cur.fetchall()
+
+        tweet_sentiment_tab = []
+        calc_rows = 0
+
+        # loop through all rows in table
+        for row in rows:
+            # TODO possible make better trail spaces removing
+            sentence = row[1].lower().strip()
+            tweet_sentiment = 0
+            # loop through all words in twitter text
+            for key in sentence.split():
+                # find in set to make faster
+                if key in words_set:
+                    # if found count of word occurrences
+                    m = re.findall('\\b' + key + '\\b', sentence, re.IGNORECASE)
+                    tweet_sentiment = tweet_sentiment + len(m) * words_dic[key]
+                    print('tweet_sentiment {0}'.format(tweet_sentiment))
+                    # store update information in table
+                    tweet_sentiment_tab_row = int(tweet_sentiment), int(row[0])
+                    tweet_sentiment_tab.append(tweet_sentiment_tab_row)
+
+            # debug info
+            calc_rows += 1
+            print(calc_rows)
+        # update field tweet_sentiment
+        sql_update = 'update tweet_norm set tweet_sentiment = ? where id = ?'
+        cur_update = conn.cursor()
+        cur_update.executemany(sql_update, tweet_sentiment_tab)
+
+        conn.commit()
+        cur_update.close()
+
+        words_f.close()
 
     # close file and DB
     conn.close()
-    f.close()
+
 
 
 if __name__ == '__main__':
