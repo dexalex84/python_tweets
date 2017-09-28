@@ -117,6 +117,11 @@ def loadTweet(json_str, get_retweeted_status):
         pass
 
     try:
+        tweet_id = json_str_final['id']
+    except:
+        pass
+
+    try:
         lang = json_str_final['lang']
     except:
         pass
@@ -152,7 +157,7 @@ def loadTweet(json_str, get_retweeted_status):
         else:
             display_url = ""
 
-        tweet = name, tweet_text, country_code, display_url, lang, created_at, location
+        tweet = name, tweet_text, country_code, display_url, lang, created_at, location, tweet_id
         tweet_row.append(tweet)
 
     return tweet_row
@@ -174,8 +179,8 @@ def main(argv):
             print('Unresolved error. Exit')
             sys.exit(2)
 
-        sql = ''' insert into tweet(name, tweet_text, country_code, display_url, lang, created_at, location)
-                  values(?, ?, ?, ?, ?, ?, ?)  
+        sql = ''' insert into tweet(name, tweet_text, country_code, display_url, lang, created_at, location, tweet_id)
+                  values(?, ?, ?, ?, ?, ?, ?, ?)  
                       '''
 
         table = []
@@ -295,3 +300,7 @@ def main(argv):
 
 if __name__ == '__main__':
     main(sys.argv[1:])
+
+
+# par: d C:\mts\test.db -o load -t C:\mts\Documents_\three_minutes_tweets.json.txt -w C:\mts\Documents_\AFINN-111.txt
+# par: d C:\mts\test.db -o calculate -t C:\mts\Documents_\three_minutes_tweets.json.txt -w C:\mts\Documents_\AFINN-111.txt

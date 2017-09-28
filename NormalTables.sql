@@ -38,6 +38,7 @@ create table if not exists tweet_norm
 	lang_id 	integer ,
 	created_at	DATETIME, 
 	source_id   integer,
+	tweet_id    bigint,
 	tweet_sentiment integer DEFAULT 0,
 	foreign key (user_id) references user(id), 
 	foreign key (place_id) references place(id), 

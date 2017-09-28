@@ -56,7 +56,8 @@ insert into tweet_norm
 	,place_id	
 	,lang_id 	
 	,created_at	
-	,source_id   
+	,source_id 
+	,tweet_id	
 )
 select	
 	u.id 			user_id,
@@ -64,12 +65,15 @@ select
 	p.id			place_id,
 	l.id 			lang_id,
 	t.created_at	created_at,
-	t.source_id		source_id
+	t.source_id		source_id,
+	t.tweet_id		tweet_id
 from 
 	(
-		select distinct name, lang, country_code, tweet_text, created_at, id source_id
+		select name, lang, country_code, tweet_text, created_at, max(id) source_id, max(tweet_id) tweet_id 
 		from	
 			tweet t
+		group by 
+			name, lang, country_code, tweet_text, created_at
 	)t
 left join	
 	user u on (
@@ -89,7 +93,7 @@ select
 	display_url, tn.id tweet_norm_id
 from 
 	(
-		select distinct display_url, id
+		select distinct display_url, tweet_id
 		from	
 			tweet t
 		where	
@@ -98,7 +102,7 @@ from
 join
 	tweet_norm tn on
 	(
-		tn.source_id = t.id
+		tn.tweet_id = t.tweet_id
 	);
 	
 	
